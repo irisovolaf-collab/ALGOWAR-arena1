@@ -1,18 +1,18 @@
 const logElement = document.getElementById('log');
 
-// Characters Stats
+// Character Stats
 const titan = { name: "Code-Titan", hp: 200, maxHp: 200, atk: 15, hasShield: true };
 const assassin = { name: "Script-Assassin", hp: 80, maxHp: 80, atk: 40 };
 const medic = { name: "Bit-Medic", healPower: 25 };
 
-// FIX: This function now correctly updates the health bars on screen
+// This function updates the health bars on your screen
 function updateUI() {
-    // Update Titan Bar
+    // Update Titan's bar and text
     const titanPct = (titan.hp / titan.maxHp) * 100;
     document.getElementById('titan-hp-bar').style.width = Math.max(0, titanPct) + "%";
     document.getElementById('titan-hp-text').innerText = `${Math.round(Math.max(0, titan.hp))}/${titan.maxHp}`;
 
-    // Update Assassin Bar
+    // Update Assassin's bar and text
     const assassinPct = (assassin.hp / assassin.maxHp) * 100;
     document.getElementById('assassin-hp-bar').style.width = Math.max(0, assassinPct) + "%";
     document.getElementById('assassin-hp-text').innerText = `${Math.round(Math.max(0, assassin.hp))}/${assassin.maxHp}`;
@@ -26,22 +26,21 @@ function print(text) {
 function playerAttack() {
     if (titan.hp <= 0 || assassin.hp <= 0) return;
 
-    // --- PLAYER TURN ---
+    // --- YOUR TURN ---
     let isCrit = Math.random() < 0.2; 
     let baseDmg = 35 + Math.random() * 10; 
-    let finalDmg = isCrit ? baseDmg * 2 : baseDmg;
-    finalDmg = Math.round(finalDmg);
+    let finalDmg = Math.round(isCrit ? baseDmg * 2 : baseDmg);
 
     if (titan.hasShield) {
         finalDmg *= 0.5;
         titan.hasShield = false;
-        print("🛡️ <b>Titan's Shield</b> blocked 50% damage!");
+        print("🛡️ <b>Shield</b> absorbed 50% damage!");
     }
 
     titan.hp -= finalDmg;
-    print(isCrit ? `🔥 <b>CRITICAL HIT!</b> You dealt ${finalDmg} damage!` : `⚔️ You dealt ${finalDmg} damage.`);
+    print(isCrit ? `🔥 <b>CRITICAL!</b> You dealt ${finalDmg} damage!` : `⚔️ You dealt ${finalDmg} damage.`);
     
-    updateUI(); // Immediate update after your hit
+    updateUI(); // Visual update
 
     // --- ENEMY TURN ---
     if (titan.hp > 0) {
@@ -53,25 +52,24 @@ function playerAttack() {
             } else {
                 let titanDmg = Math.round(12 + Math.random() * 6);
                 assassin.hp -= titanDmg;
-                print(`🤖 <b>${titan.name}</b> hits you for ${titanDmg} damage!`);
+                print(`🤖 <b>${titan.name}</b> hits back for ${titanDmg} damage!`);
             }
 
-            // Medic Healing Logic
+            // Medic logic
             if (titan.hp < 100 && titan.hp > 0) {
                 titan.hp += medic.healPower;
                 if (titan.hp > titan.maxHp) titan.hp = titan.maxHp;
-                print(`💉 <b>${medic.name}</b> performed "Code Cleanup"! +${medic.healPower} HP to Titan.`);
+                print(`💉 <b>${medic.name}</b> used Repair! +${medic.healPower} HP to Titan.`);
             }
 
-            updateUI(); // Update bars after enemy turn
+            updateUI(); // Visual update
             
             if (assassin.hp <= 0) {
-                print("💀 <b>FATAL ERROR:</b> You died. System reboot required.");
+                print("💀 <b>DEFEATED!</b> System failure...");
             }
-            print("----------------------------");
         }, 500);
     } else {
-        print("🏆 <b>VICTORY!</b> System breached. You are the new Admin!");
+        print("🏆 <b>VICTORY!</b> System breached successfully!");
         updateUI();
     }
 }
