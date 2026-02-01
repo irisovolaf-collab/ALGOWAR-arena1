@@ -8,43 +8,38 @@
         .stats-container { display: flex; justify-content: space-around; margin: 20px auto; width: 80%; max-width: 800px; }
         .health-bar-bg { background: #333; width: 200px; height: 25px; border: 2px solid #444; margin-top: 5px; border-radius: 3px; overflow: hidden; }
         .health-bar-fill { background: #00ff00; height: 100%; width: 100%; transition: width 0.4s ease, background 0.4s ease; }
-        
         #log { border: 1px solid #00ff00; padding: 15px; margin: 20px auto; width: 80%; max-width: 700px; height: 300px; overflow-y: auto; text-align: left; background: rgba(0,20,0,0.9); border-radius: 5px; }
-        
-        .actions { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        button { border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; font-weight: bold; border-radius: 4px; transition: transform 0.1s; color: white; }
-        button:active { transform: scale(0.95); }
-        
-        /* Log Colors */
-        .log-crit { color: #ff4444; font-weight: bold; text-transform: uppercase; }
+        .actions, .shop { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .hidden { display: none !important; }
+        button { border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; font-weight: bold; border-radius: 4px; transition: 0.2s; color: white; }
+        button:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        .log-crit { color: #ff4444; font-weight: bold; }
         .log-heal { color: #44ff44; }
         .log-evade { color: #ffff44; }
-        .log-heavy { color: #ff9900; }
-        .log-system { color: #888; border-top: 1px dashed #444; margin-top: 10px; padding-top: 5px; }
+        .log-system { color: #888; border-top: 1px dashed #444; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <h1>⚔️ AlgoWar Arena ⚔️</h1>
+    <h1 id="stage-title">⚔️ AlgoWar Arena: Stage 1 ⚔️</h1>
+    <h3 id="credits-display">Credits: 0</h3>
     
     <div class="stats-container">
-        <div>
-            <strong>ASSASSIN (YOU)</strong>
-            <div class="health-bar-bg"><div id="assassin-hp-bar" class="health-bar-fill"></div></div>
-            <span id="assassin-hp-text">80/80</span>
-        </div>
-        <div>
-            <strong>CODE-TITAN</strong>
-            <div class="health-bar-bg"><div id="titan-hp-bar" class="health-bar-fill"></div></div>
-            <span id="titan-hp-text">200/200</span>
-        </div>
+        <div><strong>ASSASSIN</strong><div class="health-bar-bg"><div id="assassin-hp-bar" class="health-bar-fill"></div></div><span id="assassin-hp-text">100/100</span></div>
+        <div><strong>CODE-TITAN</strong><div class="health-bar-bg"><div id="titan-hp-bar" class="health-bar-fill"></div></div><span id="titan-hp-text">200/200</span></div>
     </div>
 
-    <div id="log"><p class="log-system">System initialized. Waiting for command...</p></div>
+    <div id="log"><p class="log-system">System online. Good luck, Operator.</p></div>
 
-    <div class="actions">
+    <div id="battle-actions" class="actions">
         <button onclick="playerAttack('quick')" style="background: #2ecc71;">QUICK STRIKE</button>
         <button onclick="playerAttack('heavy')" style="background: #e67e22;">HEAVY SLAM</button>
         <button onclick="playerAttack('heal')" style="background: #3498db;">REPAIR HP</button>
+    </div>
+
+    <div id="shop-actions" class="shop hidden">
+        <button onclick="buyUpgrade('atk')" style="background: #9b59b6;">+10 ATK (100c)</button>
+        <button onclick="buyUpgrade('hp')" style="background: #e74c3c;">+50 MAX HP (100c)</button>
+        <button onclick="nextStage()" style="background: #00ff00; color: black;">NEXT STAGE >>></button>
     </div>
 
     <script src="game.js"></script>
