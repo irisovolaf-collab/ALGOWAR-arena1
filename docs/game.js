@@ -1,6 +1,5 @@
 const logElement = document.getElementById('log');
 
-// Game State
 let stage = 1;
 let credits = 0;
 let energy = 0;
@@ -18,12 +17,10 @@ function updateUI() {
     document.getElementById('stage-title').innerText = `⚔️ Sector ${stage} ⚔️`;
     document.getElementById('credits-display').innerText = `Credits: ${credits}`;
 
-    // Energy Logic
     const eBar = document.getElementById('energy-bar');
     eBar.style.width = energy + "%";
     document.getElementById('ult-button').style.display = energy >= 100 ? "inline-block" : "none";
 
-    // Health Bars Logic
     const updateBar = (id, current, max) => {
         const pct = (current / max) * 100;
         const bar = document.getElementById(id);
@@ -55,7 +52,7 @@ function buyUpgrade(type) {
         credits -= 100;
         if (type === 'atk') assassin.atk += 12;
         else if (type === 'hp') { assassin.maxHp += 60; assassin.hp = assassin.maxHp; }
-        print("💰 Upgrade compiled and installed.", "log-heal");
+        print("💰 Upgrade installed.", "log-heal");
         updateUI();
     }
 }
@@ -63,13 +60,13 @@ function buyUpgrade(type) {
 function nextStage() {
     stage++;
     medicCharges = 3;
-    energy = Math.min(energy, 40); // Reset energy but keep a small bonus
+    energy = Math.min(energy, 40); 
     titan.maxHp = Math.round(200 * Math.pow(1.25, stage - 1));
     titan.hp = titan.maxHp;
     titan.atk = 15 + (stage * 4);
     titan.hasShield = true;
     showShop(false);
-    print(`--- Data Stream Sector ${stage} ---`, "log-system");
+    print(`--- Entering Sector ${stage} ---`, "log-system");
     updateUI();
 }
 
@@ -106,10 +103,10 @@ function playerAttack(type) {
 
     if (type !== 'heal') {
         dmg = Math.round(dmg + Math.random() * 10);
-        if (titan.hasShield && type !== 'ult') { dmg *= 0.5; titan.hasShield = false; print("🛡️ Shield absorbed 50%."); }
+        if (titan.hasShield && type !== 'ult') { dmg *= 0.5; titan.hasShield = false; print("🛡️ Shield hit!"); }
         
         let isCrit = Math.random() < 0.2 && type !== 'ult';
-        if (isCrit) { dmg *= 2; print(`🔥 CRITICAL: ${dmg} dmg!`, "log-crit"); triggerShake(); }
+        if (isCrit) { dmg *= 2; print(`🔥 CRIT: ${dmg} dmg!`, "log-crit"); triggerShake(); }
         else if (type !== 'ult') { print(`⚔️ Hit for ${dmg} damage.`); }
         
         titan.hp -= dmg;
@@ -118,26 +115,24 @@ function playerAttack(type) {
 
     if (titan.hp > 0) {
         setTimeout(() => {
-            let chance = 0.15 + dodgeBonus;
-            if (Math.random() < chance) {
-                print("💨 Evaded Titan strike!", "log-evade");
+            if (Math.random() < (0.15 + dodgeBonus)) {
+                print("💨 Evaded strike!", "log-evade");
             } else {
                 let tDmg = Math.round(titan.atk + Math.random() * 5);
                 assassin.hp -= tDmg;
-                print(`🤖 Titan deals -${tDmg} HP.`);
+                print(`🤖 Titan: -${tDmg} HP.`);
                 triggerShake();
             }
-            // Medic Logic
             if (titan.hp < (titan.maxHp * 0.4) && medicCharges > 0) {
                 titan.hp += (30 + stage * 5); medicCharges--;
-                print(`💉 Medic used Repair Pack! (${medicCharges} left)`, "log-heal");
+                print(`💉 Medic Repair Pack! (${medicCharges} left)`, "log-heal");
             }
             updateUI();
-            if (assassin.hp <= 0) print("💀 FATAL ERROR: System offline.", "log-crit");
+            if (assassin.hp <= 0) print("💀 FATAL ERROR: Offline.", "log-crit");
         }, 500);
     } else {
         credits += 125;
-        print("🏆 Wave Cleared. Credits +125.", "log-heal");
+        print("🏆 Victory! Credits +125.", "log-heal");
         showShop(true);
     }
 }
