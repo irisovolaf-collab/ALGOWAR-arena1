@@ -1,34 +1,26 @@
-// Характеристики персонажей
-const titan = {
-    name: "Код-Титан",
-    hp: 200,
-    atk: 15,
-    def: 10,
-    hasShield: true // Тот самый авто-щит
-};
+const logElement = document.getElementById('log');
 
-const assassin = {
-    name: "Скрипт-Убийца",
-    hp: 80,
-    atk: 40,
-    def: 5
-};
-
-// Простая функция атаки
-function attack(attacker, target) {
-    console.log(`${attacker.name} атакует ${target.name}!`);
-    let damage = attacker.atk;
-
-    // Логика щита Титана
-    if (target.name === "Код-Титан" && target.hasShield) {
-        console.log("🛡️ Баг-щит сработал! Урон снижен.");
-        damage = damage * 0.5; // Пробитие защиты на 50%
-        target.hasShield = false; // Щит ломается после удара
-    }
-
-    target.hp -= damage;
-    console.log(`Остаток HP у ${target.name}: ${target.hp}`);
+function print(text) {
+    logElement.innerHTML += `<p>${text}</p>`;
 }
 
-// Тестовый бой
-attack(assassin, titan);
+const titan = { name: "Код-Титан", hp: 200, atk: 15, hasShield: true };
+const assassin = { name: "Скрипт-Убийца", hp: 80, atk: 40 };
+
+logElement.innerHTML = "<b>Битва начинается!</b><br>";
+
+// Логика атаки
+function battle(a, b) {
+    print(`⚔️ ${a.name} атакует ${b.name}!`);
+    let dmg = a.atk;
+    if (b.name === "Код-Титан" && b.hasShield) {
+        print("🛡️ Щит Титана поглотил 50% урона!");
+        dmg = dmg * 0.5;
+        b.hasShield = false;
+    }
+    b.hp -= dmg;
+    print(`💥 Урон: ${dmg}. У ${b.name} осталось ${b.hp} HP.`);
+}
+
+battle(assassin, titan);
+battle(titan, assassin);
