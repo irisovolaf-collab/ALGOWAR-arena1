@@ -1,75 +1,53 @@
-const logElement = document.getElementById('log');
-
-// Character Stats
-const titan = { name: "Code-Titan", hp: 200, maxHp: 200, atk: 15, hasShield: true };
-const assassin = { name: "Script-Assassin", hp: 80, maxHp: 80, atk: 40 };
-const medic = { name: "Bit-Medic", healPower: 25 };
-
-// This function updates the health bars on your screen
-function updateUI() {
-    // Update Titan's bar and text
-    const titanPct = (titan.hp / titan.maxHp) * 100;
-    document.getElementById('titan-hp-bar').style.width = Math.max(0, titanPct) + "%";
-    document.getElementById('titan-hp-text').innerText = `${Math.round(Math.max(0, titan.hp))}/${titan.maxHp}`;
-
-    // Update Assassin's bar and text
-    const assassinPct = (assassin.hp / assassin.maxHp) * 100;
-    document.getElementById('assassin-hp-bar').style.width = Math.max(0, assassinPct) + "%";
-    document.getElementById('assassin-hp-text').innerText = `${Math.round(Math.max(0, assassin.hp))}/${assassin.maxHp}`;
-}
-
-function print(text) {
-    logElement.innerHTML += `<p>${text}</p>`;
-    logElement.scrollTop = logElement.scrollHeight;
-}
-
-function playerAttack() {
+function playerAttack(type) {
     if (titan.hp <= 0 || assassin.hp <= 0) return;
 
-    // --- YOUR TURN ---
-    let isCrit = Math.random() < 0.2; 
-    let baseDmg = 35 + Math.random() * 10; 
-    let finalDmg = Math.round(isCrit ? baseDmg * 2 : baseDmg);
+    let finalDmg = 0;
+    let dodgeBonus = 0;
 
-    if (titan.hasShield) {
-        finalDmg *= 0.5;
-        titan.hasShield = false;
-        print("🛡️ <b>Shield</b> absorbed 50% damage!");
+    if (type === 'quick') {
+        finalDmg = 25 + Math.random() * 10;
+        dodgeBonus = 0.2; // +20% chance to dodge
+        print("⚡ <b>Quick Strike!</b> You are more agile now.");
+    } else if (type === 'heavy') {
+        finalDmg = 60 + Math.random() * 20;
+        dodgeBonus = -0.5; // Impossible to dodge
+        print("🔨 <b>Heavy Slam!</b> Huge damage, but you are vulnerable!");
+    } else if (type === 'heal') {
+        let heal = 30;
+        assassin.hp = Math.min(assassin.maxHp, assassin.hp + heal);
+        print(`✨ <b>Self-Repair!</b> Recovered ${heal} HP.`);
+        updateUI();
+        // After healing, Titan still attacks!
     }
 
-    titan.hp -= finalDmg;
-    print(isCrit ? `🔥 <b>CRITICAL!</b> You dealt ${finalDmg} damage!` : `⚔️ You dealt ${finalDmg} damage.`);
-    
-    updateUI(); // Visual update
+    if (type !== 'heal') {
+        finalDmg = Math.round(finalDmg);
+        titan.hp -= finalDmg;
+        print(`⚔️ Dealt ${finalDmg} damage to Titan.`);
+    }
 
-    // --- ENEMY TURN ---
+    updateUI();
+
+    // Enemy Turn
     if (titan.hp > 0) {
         setTimeout(() => {
-            let isDodge = Math.random() < 0.15; 
-            
-            if (isDodge) {
-                print("💨 <b>EVADE!</b> You dodged the attack!");
+            let dodgeChance = 0.15 + dodgeBonus;
+            if (Math.random() < dodgeChance) {
+                print("💨 <b>EVADED!</b> Titan missed!");
             } else {
-                let titanDmg = Math.round(12 + Math.random() * 6);
-                assassin.hp -= titanDmg;
-                print(`🤖 <b>${titan.name}</b> hits back for ${titanDmg} damage!`);
+                let tDmg = Math.round(12 + Math.random() * 6);
+                assassin.hp -= tDmg;
+                print(`🤖 Titan hits you for ${tDmg} damage!`);
             }
-
+            
             // Medic logic
             if (titan.hp < 100 && titan.hp > 0) {
                 titan.hp += medic.healPower;
-                if (titan.hp > titan.maxHp) titan.hp = titan.maxHp;
-                print(`💉 <b>${medic.name}</b> used Repair! +${medic.healPower} HP to Titan.`);
+                print(`💉 Medic healed Titan!`);
             }
-
-            updateUI(); // Visual update
-            
-            if (assassin.hp <= 0) {
-                print("💀 <b>DEFEATED!</b> System failure...");
-            }
-        }, 500);
+            updateUI();
+        }, 600);
     } else {
-        print("🏆 <b>VICTORY!</b> System breached successfully!");
-        updateUI();
+        print("🏆 <b>VICTORY!</b>");
     }
 }

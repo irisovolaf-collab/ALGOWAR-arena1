@@ -30,7 +30,11 @@
     </div>
 
     <div id="log">Prepare for battle...</div>
-    <button onclick="playerAttack()">ATTACK!</button>
+    <div class="actions" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+    <button onclick="playerAttack('quick')" style="background: #00ff00; color: black; padding: 10px 20px;">QUICK STRIKE</button>
+    <button onclick="playerAttack('heavy')" style="background: #ff4500; color: white; padding: 10px 20px;">HEAVY SLAM</button>
+    <button onclick="playerAttack('heal')" style="background: #0000ff; color: white; padding: 10px 20px;">REPAIR HP</button>
+</div>
 
     <script src="game.js"></script>
 </body>
