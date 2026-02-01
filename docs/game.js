@@ -1,11 +1,11 @@
-// ASCII-арт база
+// ASCII Art Database
 const arts = {
     TITAN: `\n      _______\n     |  ___  |\n     | |   | |\n     | |___| |\n     |_______|\n     /       \\\n    / [X] [X] \\\n    |    ^    |\n    \\_________/`,
     SCOUT: `\n       /\\\n      /  \\\n     | -- |\n     | !! |\n      \\__/\n      /  \\\n     /____\\`,
     GUARD: `\n     _________\n    |  _____  |\n    | |  I  | |\n    | |_____| |\n    |_________|\n    [#########]\n    [#########]`
 };
 
-// Параметры игрока
+// Player Stats
 let player = {
     hp: 100,
     maxHp: 100,
@@ -15,19 +15,19 @@ let player = {
     nextXp: 100
 };
 
-// Параметры мира
+// World State
 let stage = 1;
 let credits = 0;
 let energy = 0;
 let enemy = { name: "CYBER-TITAN", hp: 200, maxHp: 200, atk: 15, type: "TITAN", color: "#e74c3c" };
 
-// Обновление всего интерфейса
+// Update UI Function
 function updateUI() {
     document.getElementById('stage-title').innerText = "SECTOR " + stage;
     document.getElementById('credits-display').innerText = "Credits: " + credits;
     document.getElementById('player-lvl').innerText = "LVL: " + player.lvl;
     
-    // Полоски
+    // Bars
     document.getElementById('energy-bar').style.width = energy + "%";
     document.getElementById('xp-bar').style.width = (player.xp / player.nextXp * 100) + "%";
     document.getElementById('ult-button').style.display = (energy >= 100) ? "inline-block" : "none";
@@ -38,7 +38,7 @@ function updateUI() {
     document.getElementById('player-hp-text').innerText = Math.round(player.hp) + "/" + player.maxHp;
     document.getElementById('enemy-hp-text').innerText = Math.round(enemy.hp) + "/" + enemy.maxHp;
     
-    // Визуал врага
+    // Enemy Visual
     const visual = document.getElementById('enemy-visual');
     visual.innerText = arts[enemy.type] || arts.TITAN;
     visual.style.color = enemy.color;
@@ -46,32 +46,32 @@ function updateUI() {
     document.getElementById('enemy-name').style.color = enemy.color;
 }
 
-// Логирование событий
+// Logging Function
 function print(msg, cls = "") {
     const log = document.getElementById('log');
     log.innerHTML += `<p class="${cls}">${msg}</p>`;
     log.scrollTop = log.scrollHeight;
 }
 
-// Система уровней
+// Leveling System
 function checkLvlUp() {
     if (player.xp >= player.nextXp) {
         player.lvl++;
         player.xp -= player.nextXp;
         player.nextXp = Math.round(player.nextXp * 1.6);
         
-        // Бонусы за уровень
+        // Level-up Bonuses
         player.maxHp += 30;
         player.hp = player.maxHp;
         player.atk += 12;
         
-        print(`🌟 LEVEL UP! Достигнут уровень ${player.lvl}!`, "log-xp");
-        print(`📈 Параметры улучшены: +12 ATK, +30 HP`, "log-heal");
-        checkLvlUp(); // Рекурсия на случай получения кучи опыта сразу
+        print(`🌟 LEVEL UP! Reached Level ${player.lvl}!`, "log-xp");
+        print(`📈 Stats Improved: +12 ATK, +30 HP`, "log-heal");
+        checkLvlUp(); // Recursive check for multiple levels
     }
 }
 
-// ОСНОВНАЯ ЛОГИКА АТАКИ
+// COMBAT LOGIC
 window.attack = function(type) {
     if (player.hp <= 0 || enemy.hp <= 0) return;
 
@@ -79,48 +79,48 @@ window.attack = function(type) {
     if (type === 'quick') { 
         dmg = player.atk * 0.8; 
         energy = Math.min(100, energy + 25); 
-        print("⚡ Быстрая серия ударов!"); 
+        print("⚡ Quick strike sequence!"); 
     }
     if (type === 'heavy') { 
         dmg = player.atk * 1.5; 
         energy = Math.min(100, energy + 35); 
-        print("🔨 Тяжелое сокрушение!"); 
+        print("🔨 Heavy crushing blow!"); 
     }
     if (type === 'heal') { 
         player.hp = Math.min(player.maxHp, player.hp + 45); 
-        print("🔧 Восстановление систем...", "log-heal"); 
+        print("🔧 Repairing systems...", "log-heal"); 
     }
     if (type === 'ult') { 
         dmg = player.atk * 5; 
         energy = 0; 
-        print("🚀 СИСТЕМНАЯ ПЕРЕГРУЗКА: КРИТ!", "log-crit"); 
+        print("🚀 SYSTEM OVERLOAD: CRITICAL HIT!", "log-crit"); 
     }
 
     if (type !== 'heal') {
         let finalDmg = Math.round(dmg + Math.random() * 10);
         enemy.hp -= finalDmg;
-        print(`⚔️ Нанесено ${finalDmg} урона по ${enemy.name}`);
+        print(`⚔️ Dealt ${finalDmg} damage to ${enemy.name}`);
     }
 
     updateUI();
 
-    // Ответный ход
+    // Enemy Turn
     if (enemy.hp > 0) {
         setTimeout(() => {
             let ed = Math.round(enemy.atk + Math.random() * 5);
             player.hp -= ed;
-            print(`🤖 ${enemy.name} атакует: -${ed} HP`, "log-crit");
+            print(`🤖 ${enemy.name} attacks: -${ed} HP`, "log-crit");
             document.body.classList.add('shake');
             setTimeout(() => document.body.classList.remove('shake'), 200);
             updateUI();
-            if (player.hp <= 0) print("💀 ВНИМАНИЕ: КРИТИЧЕСКИЙ СБОЙ. ГЕЙМ ОВЕР.", "log-crit");
+            if (player.hp <= 0) print("💀 WARNING: CRITICAL FAILURE. GAME OVER.", "log-crit");
         }, 400);
     } else {
-        // Победа
+        // Victory
         const gainXP = 40 + (stage * 15);
         player.xp += gainXP;
         credits += 150;
-        print(`🏆 Сектор очищен! +150c, +${gainXP} XP`, "log-xp");
+        print(`🏆 Sector Cleared! +150c, +${gainXP} XP`, "log-xp");
         checkLvlUp();
         
         document.getElementById('battle-actions').classList.add('hidden');
@@ -129,18 +129,18 @@ window.attack = function(type) {
     }
 };
 
-// ПОКУПКИ
+// SHOP LOGIC
 window.buy = function(item) {
     if (credits >= 100) {
         credits -= 100;
         if (item === 'atk') player.atk += 15;
         if (item === 'hp') { player.maxHp += 50; player.hp = player.maxHp; }
-        print("💰 Модификация установлена.", "log-heal");
+        print("💰 Modification installed.", "log-heal");
         updateUI();
     }
 };
 
-// НОВЫЙ УРОВЕНЬ
+// NEXT LEVEL LOGIC
 window.nextLevel = function() {
     stage++;
     const types = ["TITAN", "SCOUT", "GUARD"];
@@ -158,9 +158,9 @@ window.nextLevel = function() {
     
     document.getElementById('battle-actions').classList.remove('hidden');
     document.getElementById('shop-actions').classList.add('hidden');
-    print(`🚨 Входим в Сектор ${stage}... Обнаружен ${enemy.name}`);
+    print(`🚨 Entering Sector ${stage}... Detected ${enemy.name}`);
     updateUI();
 };
 
-// Старт
+// Initialization
 window.onload = updateUI;
