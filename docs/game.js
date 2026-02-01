@@ -1,142 +1,122 @@
-const logElement = document.getElementById('log');
-let audioCtx;
+const log = document.getElementById('log');
 
-function initAudio() {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-}
-
-function playSound(f, type = 'square', d = 0.1) {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const g = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(f, audioCtx.currentTime);
-    g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
-    osc.connect(g); g.connect(audioCtx.destination);
-    osc.start(); osc.stop(audioCtx.currentTime + d);
-}
-
+// Состояние игры
 let stage = 1;
 let credits = 0;
 let energy = 0;
-const assassin = { hp: 100, maxHp: 100, atk: 40 };
-let enemy = {};
+let player = { hp: 100, maxHp: 100, atk: 40 };
+let enemy = { name: "CODE-TITAN", hp: 200, maxHp: 200, atk: 15, evade: 0.1 };
 
-const enemyTypes = [
-    { name: "CODE-TITAN", hpMult: 2.0, atkMult: 1.0, evade: 0.1, color: "#e74c3c" },
-    { name: "VIRUS-SCOUT", hpMult: 0.8, atkMult: 1.2, evade: 0.4, color: "#f1c40f" },
-    { name: "FIREWALL", hpMult: 1.5, atkMult: 0.7, evade: 0.05, color: "#3498db" }
-];
-
-function spawnEnemy() {
-    const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
-    const baseHp = 100 * Math.pow(1.2, stage - 1);
-    enemy = {
-        name: type.name,
-        maxHp: Math.round(baseHp * type.hpMult),
-        hp: Math.round(baseHp * type.hpMult),
-        atk: Math.round((10 + stage * 3) * type.atkMult),
-        evade: type.evade,
-        color: type.color
-    };
-    document.getElementById('enemy-name').innerText = enemy.name;
-    document.getElementById('enemy-name').style.color = enemy.color;
-    print(`🚨 WARNING: ${enemy.name} detected!`, "log-system");
+// Функция вывода текста
+function print(text, colorClass = "") {
+    if (log) {
+        log.innerHTML += `<p class="${colorClass}">${text}</p>`;
+        log.scrollTop = log.scrollHeight;
+    }
 }
 
+// Функция обновления интерфейса
 function updateUI() {
-    document.getElementById('stage-title').innerText = `SECTOR ${stage}`;
-    document.getElementById('credits-display').innerText = `Credits: ${credits}`;
+    document.getElementById('stage-title').innerText = "SECTOR " + stage;
+    document.getElementById('credits-display').innerText = "Credits: " + credits;
     document.getElementById('energy-bar').style.width = energy + "%";
-    document.getElementById('ult-button').style.display = energy >= 100 ? "inline-block" : "none";
+    
+    // Кнопка ульты
+    document.getElementById('ult-button').style.display = (energy >= 100) ? "inline-block" : "none";
 
-    const updateBar = (id, cur, max, textId) => {
-        const pct = (cur / max) * 100;
-        const b = document.getElementById(id);
-        const t = document.getElementById(textId);
-        if (b) {
-            b.style.width = Math.max(0, pct) + "%";
-            b.style.background = pct > 50 ? "#2ecc71" : pct > 25 ? "#f1c40f" : "#e74c3c";
-        }
-        if (t) t.innerText = `${Math.max(0, Math.round(cur))}/${Math.round(max)}`;
-    };
-    updateBar('titan-hp-bar', enemy.hp, enemy.maxHp, 'titan-hp-text');
-    updateBar('assassin-hp-bar', assassin.hp, assassin.maxHp, 'assassin-hp-text');
+    // Полоски здоровья
+    const playerPct = (player.hp / player.maxHp) * 100;
+    const enemyPct = (enemy.hp / enemy.maxHp) * 100;
+    
+    document.getElementById('player-hp-bar').style.width = Math.max(0, playerPct) + "%";
+    document.getElementById('enemy-hp-bar').style.width = Math.max(0, enemyPct) + "%";
+    
+    document.getElementById('player-hp-text').innerText = Math.round(player.hp) + "/" + player.maxHp;
+    document.getElementById('enemy-hp-text').innerText = Math.round(enemy.hp) + "/" + enemy.maxHp;
 }
 
-function print(t, c = "") {
-    logElement.innerHTML += `<p class="${c}">${t}</p>`;
-    logElement.scrollTop = logElement.scrollHeight;
-}
-
-function playerAttack(type) {
-    if (enemy.hp <= 0 || assassin.hp <= 0) return;
-    initAudio();
+// Функция атаки
+function attack(type) {
+    if (player.hp <= 0 || enemy.hp <= 0) return;
 
     let dmg = 0;
-    let dodgeBonus = 0;
+    let dodgeChance = 0.15;
 
-    if (type === 'quick') { dmg = assassin.atk * 0.7; dodgeBonus = 0.2; energy = Math.min(100, energy + 20); playSound(200); }
-    else if (type === 'heavy') { dmg = assassin.atk * 1.5; dodgeBonus = -0.3; energy = Math.min(100, energy + 30); playSound(100, 'sawtooth'); }
-    else if (type === 'heal') { assassin.hp = Math.min(assassin.maxHp, assassin.hp + 40); playSound(400, 'sine', 0.3); print("✨ Repairing...", "log-heal"); }
-    else if (type === 'ult') { dmg = assassin.atk * 4.5; energy = 0; playSound(600, 'triangle', 0.5); print("🚀 SYSTEM OVERLOAD!", "log-crit"); }
+    if (type === 'quick') {
+        dmg = player.atk * 0.8;
+        energy = Math.min(100, energy + 20);
+        dodgeChance = 0.35; // Выше шанс уклониться от ответки
+    } else if (type === 'heavy') {
+        dmg = player.atk * 1.6;
+        energy = Math.min(100, energy + 30);
+        dodgeChance = 0.05; // Почти невозможно уклониться
+    } else if (type === 'heal') {
+        player.hp = Math.min(player.maxHp, player.hp + 35);
+        print("🔧 Ремонт системы: +35 HP", "log-heal");
+    } else if (type === 'ult') {
+        dmg = player.atk * 4;
+        energy = 0;
+        print("🚀 ПЕРЕГРУЗКА: Критический урон!", "log-crit");
+    }
 
+    // Наносим урон врагу
     if (type !== 'heal') {
         if (Math.random() < enemy.evade && type !== 'ult') {
-            print(`💨 ${enemy.name} evaded!`, "log-evade");
+            print("💨 Враг уклонился!", "log-evade");
         } else {
-            dmg = Math.round(dmg + Math.random() * 10);
-            enemy.hp -= dmg;
-            print(`⚔️ Dealt ${dmg} damage.`);
+            let finalDmg = Math.round(dmg + Math.random() * 10);
+            enemy.hp -= finalDmg;
+            print("⚔️ Вы нанесли " + finalDmg + " урона.");
         }
     }
+
     updateUI();
 
+    // Ответный ход врага
     if (enemy.hp > 0) {
         setTimeout(() => {
-            if (Math.random() < (0.15 + dodgeBonus)) {
-                print("💨 You dodged!", "log-evade");
+            if (Math.random() < dodgeChance) {
+                print("💨 Вы уклонились!", "log-heal");
             } else {
-                let eDmg = Math.round(enemy.atk + Math.random() * 5);
-                assassin.hp -= eDmg;
-                print(`🤖 ${enemy.name} strike: -${eDmg} HP.`);
+                let enemyDmg = Math.round(enemy.atk + Math.random() * 5);
+                player.hp -= enemyDmg;
+                print("🤖 " + enemy.name + " ударил на " + enemyDmg, "log-crit");
                 document.body.classList.add('shake');
                 setTimeout(() => document.body.classList.remove('shake'), 200);
-                playSound(50, 'square');
             }
             updateUI();
-            if (assassin.hp <= 0) print("💀 SYSTEM FAILURE", "log-crit");
-        }, 500);
+            if (player.hp <= 0) print("💀 СИСТЕМНАЯ ОШИБКА: Вы погибли.", "log-crit");
+        }, 400);
     } else {
         credits += 125;
-        print(`🏆 Sector Cleared. Credits +125.`, "log-heal");
+        print("🏆 Сектор зачищен! Получено 125 кредитов.", "log-heal");
         document.getElementById('battle-actions').classList.add('hidden');
         document.getElementById('shop-actions').classList.remove('hidden');
     }
 }
 
-function buyUpgrade(t) {
+// Магазин
+function buy(item) {
     if (credits >= 100) {
         credits -= 100;
-        if (t === 'atk') assassin.atk += 15;
-        if (t === 'hp') { assassin.maxHp += 50; assassin.hp = assassin.maxHp; }
-        playSound(500, 'sine', 0.4);
+        if (item === 'atk') player.atk += 15;
+        if (item === 'hp') { player.maxHp += 50; player.hp = player.maxHp; }
+        print("💰 Улучшение установлено.", "log-heal");
         updateUI();
     }
 }
 
-function nextStage() {
+// Следующий уровень
+function nextLevel() {
     stage++;
     energy = Math.min(energy, 30);
-    spawnEnemy();
+    
+    // Усиливаем врага
+    enemy.maxHp = Math.round(200 * Math.pow(1.2, stage - 1));
+    enemy.hp = enemy.maxHp;
+    enemy.atk = 15 + (stage * 3);
+    
     document.getElementById('battle-actions').classList.remove('hidden');
     document.getElementById('shop-actions').classList.add('hidden');
+    print("🚨 Вход в Сектор " + stage, "log-system");
     updateUI();
-}
-
-window.onload = () => {
-    spawnEnemy();
-    updateUI();
-};
