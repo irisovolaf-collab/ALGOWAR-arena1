@@ -1,52 +1,52 @@
 const logElement = document.getElementById('log');
+const titan = { name: "Код-Титан", hp: 200, maxHp: 200, atk: 15, hasShield: true };
+const assassin = { name: "Скрипт-Убийца", hp: 80, maxHp: 80, atk: 40 };
+const medic = { name: "Бит-Медик", healPower: 25 };
+
+function updateUI() {
+    // Обновляем полоску Титана
+    const titanPct = (titan.hp / titan.maxHp) * 100;
+    document.getElementById('titan-hp-bar').style.width = Math.max(0, titanPct) + "%";
+    document.getElementById('titan-hp-text').innerText = `${Math.round(titan.hp)}/${titan.maxHp}`;
+
+    // Обновляем полоску Убийцы
+    const assassinPct = (assassin.hp / assassin.maxHp) * 100;
+    document.getElementById('assassin-hp-bar').style.width = Math.max(0, assassinPct) + "%";
+    document.getElementById('assassin-hp-text').innerText = `${Math.round(assassin.hp)}/${assassin.maxHp}`;
+}
 
 function print(text) {
     logElement.innerHTML += `<p>${text}</p>`;
-    logElement.scrollTop = logElement.scrollHeight; 
+    logElement.scrollTop = logElement.scrollHeight;
 }
 
-// Наши персонажи
-const titan = { name: "Код-Титан", hp: 200, atk: 15, hasShield: true };
-const assassin = { name: "Скрипт-Убийца", hp: 80, atk: 40 };
-const medic = { name: "Бит-Медик", healPower: 25 }; // Тот самый Медик
-
 function playerAttack() {
-    if (titan.hp <= 0 || assassin.hp <= 0) {
-        print("<b>Игра окончена! Перезагрузи страницу для нового боя.</b>");
-        return;
-    }
+    if (titan.hp <= 0 || assassin.hp <= 0) return;
 
-    // 1. Твой удар (Убийца атакует)
-    print(`⚔️ <b>${assassin.name}</b> наносит удар!`);
+    // Удар игрока
     let dmg = assassin.atk;
-    
     if (titan.hasShield) {
-        print("🛡️ Баг-щит Титана поглотил 50% урона!");
-        dmg = dmg * 0.5;
+        dmg *= 0.5;
         titan.hasShield = false;
+        print("🛡️ Щит Титана поглотил урон!");
     }
-    
     titan.hp -= dmg;
-    print(`💥 Урон: ${dmg}. У Титана осталось ${titan.hp} HP.`);
+    print(`⚔️ Ты нанес ${dmg} урона Титану!`);
+    updateUI();
 
-    // 2. Ответ противников
+    // Ответ врагов
     if (titan.hp > 0) {
         setTimeout(() => {
-            // Титан бьет в ответ
-            print(`🤖 <b>${titan.name}</b> бьет в ответ!`);
             assassin.hp -= titan.atk;
-            print(`🩸 Урон: ${titan.atk}. У Убийцы осталось ${assassin.hp} HP.`);
+            print(`🤖 Титан ударил на ${titan.atk}!`);
             
-            // МЕДИК ВСТУПАЕТ В БОЙ: лечит, если у Титана меньше 100 HP
             if (titan.hp < 100) {
-                print(`💉 <b>${medic.name}</b> применяет Рефакторинг!`);
                 titan.hp += medic.healPower;
-                print(`💚 Титан подлечился! Теперь у него ${titan.hp} HP.`);
+                print(`💉 Медик подлечил Титана на ${medic.healPower}!`);
             }
-
-            print("----------------------------");
+            updateUI();
         }, 500);
     } else {
-        print("🏆 <b>Скрипт-Убийца победил! Система взломана!</b>");
+        print("🏆 ПОБЕДА!");
     }
 }
