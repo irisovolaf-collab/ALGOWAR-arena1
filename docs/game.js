@@ -1,5 +1,47 @@
 const logElement = document.getElementById('log');
 
+// --- SOUND ENGINE ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSound(type) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'hit') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.start(); osc.stop(now + 0.1);
+    } else if (type === 'crit') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.2);
+        osc.start(); osc.stop(now + 0.2);
+    } else if (type === 'heal') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.3);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.3);
+        osc.start(); osc.stop(now + 0.3);
+    } else if (type === 'ult') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.linearRampToValueAtTime(1000, now + 0.5);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(); osc.stop(now + 0.5);
+    }
+}
+
+// --- GAME STATE ---
 let stage = 1;
 let credits = 0;
 let energy = 0;
@@ -28,7 +70,6 @@ function updateUI() {
         if (pct > 50) bar.style.background = "#2ecc71";
         else if (pct > 25) bar.style.background = "#f1c40f";
         else { bar.style.background = "#e74c3c"; bar.classList.add('low-hp'); }
-        if (pct > 25) bar.classList.remove('low-hp');
     };
 
     updateBar('titan-hp-bar', titan.hp, titan.maxHp);
@@ -50,6 +91,7 @@ function showShop(show) {
 function buyUpgrade(type) {
     if (credits >= 100) {
         credits -= 100;
+        playSound('heal');
         if (type === 'atk') assassin.atk += 12;
         else if (type === 'hp') { assassin.maxHp += 60; assassin.hp = assassin.maxHp; }
         print("💰 Upgrade installed.", "log-heal");
@@ -66,12 +108,14 @@ function nextStage() {
     titan.atk = 15 + (stage * 4);
     titan.hasShield = true;
     showShop(false);
-    print(`--- Entering Sector ${stage} ---`, "log-system");
     updateUI();
 }
 
 function playerAttack(type) {
     if (titan.hp <= 0 || assassin.hp <= 0) return;
+
+    // Решаем проблему блокировки звука браузером
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
     let dmg = 0;
     let dodgeBonus = 0;
@@ -80,61 +124,43 @@ function playerAttack(type) {
         dmg = assassin.atk * 0.75; 
         dodgeBonus = 0.3; 
         energy = Math.min(100, energy + 25);
-        print("⚡ Quick Strike!", "log-evade");
+        playSound('hit');
     }
     else if (type === 'heavy') { 
         dmg = assassin.atk * 1.6; 
         dodgeBonus = -0.4; 
         energy = Math.min(100, energy + 35);
-        print("🔨 Heavy Slam!", "log-heavy");
+        playSound('crit');
     }
     else if (type === 'heal') { 
-        let h = 40 + (stage * 2);
-        assassin.hp = Math.min(assassin.maxHp, assassin.hp + h); 
-        print(`✨ Repairing... +${h} HP`, "log-heal"); 
+        assassin.hp = Math.min(assassin.maxHp, assassin.hp + 40); 
+        playSound('heal');
+        print("✨ Repairing...", "log-heal"); 
     }
     else if (type === 'ult') {
         dmg = assassin.atk * 3.8;
         energy = 0;
         titan.hasShield = false; 
-        print("🚀 ULTIMATE: SYSTEM OVERLOAD!", "log-crit");
-        triggerShake(); triggerShake();
+        playSound('ult');
+        triggerShake();
     }
 
     if (type !== 'heal') {
         dmg = Math.round(dmg + Math.random() * 10);
-        if (titan.hasShield && type !== 'ult') { dmg *= 0.5; titan.hasShield = false; print("🛡️ Shield hit!"); }
-        
-        let isCrit = Math.random() < 0.2 && type !== 'ult';
-        if (isCrit) { dmg *= 2; print(`🔥 CRIT: ${dmg} dmg!`, "log-crit"); triggerShake(); }
-        else if (type !== 'ult') { print(`⚔️ Hit for ${dmg} damage.`); }
-        
         titan.hp -= dmg;
+        updateUI();
     }
-    updateUI();
 
     if (titan.hp > 0) {
         setTimeout(() => {
             if (Math.random() < (0.15 + dodgeBonus)) {
-                print("💨 Evaded strike!", "log-evade");
+                print("💨 Evaded!", "log-evade");
             } else {
                 let tDmg = Math.round(titan.atk + Math.random() * 5);
                 assassin.hp -= tDmg;
-                print(`🤖 Titan: -${tDmg} HP.`);
+                playSound('hit');
                 triggerShake();
             }
-            if (titan.hp < (titan.maxHp * 0.4) && medicCharges > 0) {
-                titan.hp += (30 + stage * 5); medicCharges--;
-                print(`💉 Medic Repair Pack! (${medicCharges} left)`, "log-heal");
-            }
             updateUI();
-            if (assassin.hp <= 0) print("💀 FATAL ERROR: Offline.", "log-crit");
         }, 500);
     } else {
-        credits += 125;
-        print("🏆 Victory! Credits +125.", "log-heal");
-        showShop(true);
-    }
-}
-
-updateUI();
