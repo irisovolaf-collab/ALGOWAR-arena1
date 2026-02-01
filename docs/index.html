@@ -5,12 +5,16 @@
     <title>AlgoWar Arena</title>
     <style>
         body { background: #1e1e1e; color: #00ff00; font-family: monospace; text-align: center; }
-        #log { border: 1px solid #00ff00; padding: 20px; margin: 20px auto; width: 60%; min-height: 200px; }
+        #log { border: 1px solid #00ff00; padding: 20px; margin: 20px auto; width: 60%; height: 300px; overflow-y: auto; text-align: left; }
+        button { background: #00ff00; color: #1e1e1e; border: none; padding: 15px 30px; font-size: 18px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #00cc00; }
     </style>
 </head>
 <body>
     <h1>⚔️ AlgoWar Arena ⚔️</h1>
-    <div id="log">Открой консоль (F12) или подожди обновлений кода...</div>
+    <div id="log">Нажми на кнопку, чтобы начать атаку!</div>
+    <br>
+    <button onclick="playerAttack()">АТАКОВАТЬ!</button>
     <script src="game.js"></script>
 </body>
 </html>
