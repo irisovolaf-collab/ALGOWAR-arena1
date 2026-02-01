@@ -1,24 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>AlgoWar Arena: Rogue-Lite</title>
+    <title>AlgoWar: Arena</title>
     <style>
-        body { background: #111; color: #0f0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; overflow-x: hidden; }
-        .stats-container { display: flex; justify-content: space-around; margin: 20px auto; width: 90%; max-width: 900px; }
-        .health-bar-bg { background: #333; width: 220px; height: 25px; border: 2px solid #444; margin-top: 5px; border-radius: 3px; position: relative; }
-        .health-bar-fill { background: #2ecc71; height: 100%; width: 100%; transition: width 0.4s ease, background 0.4s ease; }
-        
-        .energy-bar-bg { background: #000; width: 220px; height: 8px; border: 1px solid #0ff; margin-top: 10px; border-radius: 2px; }
-        #energy-bar { background: #0ff; height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px #0ff; }
-        
-        #log { border: 1px solid #0f0; padding: 15px; margin: 20px auto; width: 85%; max-width: 750px; height: 250px; overflow-y: auto; text-align: left; background: rgba(0,10,0,0.9); font-size: 14px; }
-        
-        .actions, .shop { margin: 20px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        body { background: #0a0a0a; color: #00ff00; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; overflow-x: hidden; }
+        .stats-container { display: flex; justify-content: space-around; margin: 20px auto; width: 95%; max-width: 900px; }
+        .health-bar-bg { background: #222; width: 220px; height: 25px; border: 2px solid #444; margin-top: 5px; border-radius: 3px; position: relative; }
+        .health-bar-fill { background: #2ecc71; height: 100%; width: 100%; transition: width 0.3s ease; }
+        .energy-bar-bg { background: #000; width: 220px; height: 8px; border: 1px solid #00ffff; margin-top: 10px; }
+        #energy-bar { background: #00ffff; height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 10px #00ffff; }
+        #log { border: 1px solid #00ff00; padding: 15px; margin: 20px auto; width: 85%; max-width: 750px; height: 250px; overflow-y: auto; text-align: left; background: rgba(0,20,0,0.9); font-size: 14px; }
+        .actions, .shop { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
         .hidden { display: none !important; }
-        
-        button { border: none; padding: 12px 18px; cursor: pointer; font-weight: bold; border-radius: 4px; color: white; text-transform: uppercase; transition: 0.2s; }
-        button:hover { filter: brightness(1.2); transform: translateY(-2px); }
-        
+        button { border: none; padding: 12px 20px; cursor: pointer; font-weight: bold; border-radius: 4px; color: white; text-transform: uppercase; transition: 0.2s; }
+        button:hover { transform: translateY(-2px); filter: brightness(1.2); }
         @keyframes shake { 0% { transform: translate(2px, 2px); } 20% { transform: translate(-3px, 0); } 100% { transform: translate(0, 0); } }
         .shake { animation: shake 0.2s; }
+        .log-crit { color: #ff4444; font-weight: bold; }
+        .log-heal { color: #44ff44; }
+        .log-system { color: #888; border-top: 1px dashed #333; padding-top: 5px; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <h1 id="stage-title">Sector 1</h1>
+    <h3 id="credits-display" style="color: #f1c40f;">Credits: 0</h3>
+    <div class="stats-container">
+        <div>
+            <strong>ASSASSIN (PLAYER)</strong>
+            <div class="health-bar-bg"><div id="player-hp-bar" class="health-bar-fill"></div></div>
+            <span id="player-hp-text">100/100</span>
+            <div class="energy-bar-bg"><div id="energy-bar"></div></div>
+            <small style="color: #00ffff;">ULT READY AT 100%</small>
+        </div>
+        <div>
+            <strong id="enemy-name">ENEMY</strong>
+            <div class="health-bar-bg"><div id="enemy-hp-bar" class="health-bar-fill"></div></div>
+            <span id="enemy-hp-text">200/200</span>
+        </div>
+    </div>
+    <div id="log"></div>
+    <div id="battle-actions" class="actions">
+        <button onclick="attack('quick')" style="background: #27ae60;">Quick</button>
+        <button onclick="attack('heavy')" style="background: #d35400;">Heavy</button>
+        <button onclick="attack('heal')" style="background: #2980b9;">Repair</button>
+        <button id="ult-button" onclick="attack('ult')" style="background: #8e44ad; display: none;">🔥 OVERLOAD 🔥</button>
+    </div>
+    <div id="shop-actions" class="shop hidden">
+        <button onclick="buy('atk')" style="background: #9b59b6;">+15 ATK (100c)</button>
+        <button onclick="buy('hp')" style="background: #c0392b;">+50 HP (100c)</button>
+        <button onclick="nextLevel()" style="background: #27ae60; color: #000;">NEXT SECTOR</button>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
