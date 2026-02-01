@@ -4,18 +4,23 @@
     <meta charset="UTF-8">
     <title>AlgoWar Arena</title>
     <style>
-        body { background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; text-align: center; }
-        .stats-container { display: flex; justify-content: space-around; margin: 20px auto; width: 80%; }
-        .health-bar-bg { background: #333; width: 200px; height: 20px; border: 1px solid #00ff00; margin-top: 5px; }
-        .health-bar-fill { background: #00ff00; height: 100%; width: 100%; transition: width 0.3s ease; }
-        #log { border: 1px solid #00ff00; padding: 15px; margin: 20px auto; width: 70%; height: 250px; overflow-y: auto; text-align: left; background: rgba(0,255,0,0.05); }
-        button { background: #ff4500; color: white; border: none; padding: 15px 40px; font-size: 20px; cursor: pointer; font-weight: bold; border-radius: 5px; }
-        button:hover { background: #ff6347; transform: scale(1.05); }
-        .log-crit { color: #ff0000; font-weight: bold; text-transform: uppercase; }
-.log-heal { color: #00ff00; }
-.log-evade { color: #ffff00; }
-.log-heavy { color: #ffa500; font-size: 1.1em; }
-.log-system { color: #aaa; font-style: italic; }
+        body { background: #1a1a1a; color: #00ff00; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; }
+        .stats-container { display: flex; justify-content: space-around; margin: 20px auto; width: 80%; max-width: 800px; }
+        .health-bar-bg { background: #333; width: 200px; height: 25px; border: 2px solid #444; margin-top: 5px; border-radius: 3px; overflow: hidden; }
+        .health-bar-fill { background: #00ff00; height: 100%; width: 100%; transition: width 0.4s ease, background 0.4s ease; }
+        
+        #log { border: 1px solid #00ff00; padding: 15px; margin: 20px auto; width: 80%; max-width: 700px; height: 300px; overflow-y: auto; text-align: left; background: rgba(0,20,0,0.9); border-radius: 5px; }
+        
+        .actions { margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        button { border: none; padding: 12px 24px; font-size: 16px; cursor: pointer; font-weight: bold; border-radius: 4px; transition: transform 0.1s; color: white; }
+        button:active { transform: scale(0.95); }
+        
+        /* Log Colors */
+        .log-crit { color: #ff4444; font-weight: bold; text-transform: uppercase; }
+        .log-heal { color: #44ff44; }
+        .log-evade { color: #ffff44; }
+        .log-heavy { color: #ff9900; }
+        .log-system { color: #888; border-top: 1px dashed #444; margin-top: 10px; padding-top: 5px; }
     </style>
 </head>
 <body>
@@ -29,17 +34,18 @@
         </div>
         <div>
             <strong>CODE-TITAN</strong>
-            <div class="health-bar-bg"><div id="titan-hp-bar" class="health-bar-fill" style="background: #ff0000;"></div></div>
+            <div class="health-bar-bg"><div id="titan-hp-bar" class="health-bar-fill"></div></div>
             <span id="titan-hp-text">200/200</span>
         </div>
     </div>
 
-    <div id="log">Prepare for battle...</div>
-    <div class="actions" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
-    <button onclick="playerAttack('quick')" style="background: #00ff00; color: black; padding: 10px 20px;">QUICK STRIKE</button>
-    <button onclick="playerAttack('heavy')" style="background: #ff4500; color: white; padding: 10px 20px;">HEAVY SLAM</button>
-    <button onclick="playerAttack('heal')" style="background: #0000ff; color: white; padding: 10px 20px;">REPAIR HP</button>
-</div>
+    <div id="log"><p class="log-system">System initialized. Waiting for command...</p></div>
+
+    <div class="actions">
+        <button onclick="playerAttack('quick')" style="background: #2ecc71;">QUICK STRIKE</button>
+        <button onclick="playerAttack('heavy')" style="background: #e67e22;">HEAVY SLAM</button>
+        <button onclick="playerAttack('heal')" style="background: #3498db;">REPAIR HP</button>
+    </div>
 
     <script src="game.js"></script>
 </body>
