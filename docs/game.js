@@ -1,7 +1,18 @@
 const logElement = document.getElementById('log');
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx;
+
+// Инициализация звука при первом клике
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
 
 function playSound(f, type = 'square', d = 0.1) {
+    if (!audioCtx) return;
     const osc = audioCtx.createOscillator();
     const g = audioCtx.createGain();
     osc.type = type;
@@ -35,53 +46,68 @@ function spawnEnemy() {
         evade: type.evade,
         color: type.color
     };
-    document.getElementById('enemy-name').innerText = enemy.name;
-    document.getElementById('enemy-name').style.color = enemy.color;
-    print(`🚨 WARNING: ${enemy.name} detected!`, "log-system");
+    const nameElem = document.getElementById('enemy-name');
+    if (nameElem) {
+        nameElem.innerText = enemy.name;
+        nameElem.style.color = enemy.color;
+    }
+    print(`🚨 Sector ${stage}: ${enemy.name} detected!`, "log-system");
 }
 
 function updateUI() {
-    document.getElementById('stage-title').innerText = `SECTOR ${stage}`;
-    document.getElementById('credits-display').innerText = `Credits: ${credits}`;
-    document.getElementById('energy-bar').style.width = energy + "%";
-    document.getElementById('ult-button').style.display = energy >= 100 ? "inline-block" : "none";
+    const stageTitle = document.getElementById('stage-title');
+    if (stageTitle) stageTitle.innerText = `SECTOR ${stage}`;
+    
+    const credDisp = document.getElementById('credits-display');
+    if (credDisp) credDisp.innerText = `Credits: ${credits}`;
 
-    const updateBar = (id, cur, max) => {
+    const eBar = document.getElementById('energy-bar');
+    if (eBar) eBar.style.width = energy + "%";
+
+    const ultBtn = document.getElementById('ult-button');
+    if (ultBtn) ultBtn.style.display = energy >= 100 ? "inline-block" : "none";
+
+    const updateBar = (id, cur, max, textId) => {
         const pct = (cur / max) * 100;
         const b = document.getElementById(id);
-        b.style.width = Math.max(0, pct) + "%";
-        b.style.background = pct > 50 ? "#2ecc71" : pct > 25 ? "#f1c40f" : "#e74c3c";
+        const t = document.getElementById(textId);
+        if (b) {
+            b.style.width = Math.max(0, pct) + "%";
+            b.style.background = pct > 50 ? "#2ecc71" : pct > 25 ? "#f1c40f" : "#e74c3c";
+        }
+        if (t) t.innerText = `${Math.max(0, Math.round(cur))}/${Math.round(max)}`;
     };
-    updateBar('titan-hp-bar', enemy.hp, enemy.maxHp);
-    updateBar('assassin-hp-bar', assassin.hp, assassin.maxHp);
-    document.getElementById('titan-hp-text').innerText = `${enemy.hp}/${enemy.maxHp}`;
-    document.getElementById('assassin-hp-text').innerText = `${assassin.hp}/${assassin.maxHp}`;
+
+    updateBar('titan-hp-bar', enemy.hp, enemy.maxHp, 'titan-hp-text');
+    updateBar('assassin-hp-bar', assassin.hp, assassin.maxHp, 'assassin-hp-text');
 }
 
 function print(t, c = "") {
-    logElement.innerHTML += `<p class="${c}">${t}</p>`;
-    logElement.scrollTop = logElement.scrollHeight;
+    if (logElement) {
+        logElement.innerHTML += `<p class="${c}">${t}</p>`;
+        logElement.scrollTop = logElement.scrollHeight;
+    }
 }
 
 function playerAttack(type) {
     if (enemy.hp <= 0 || assassin.hp <= 0) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    initAudio(); // Активируем звук при клике
 
     let dmg = 0;
     let dodgeBonus = 0;
 
     if (type === 'quick') { dmg = assassin.atk * 0.7; dodgeBonus = 0.2; energy = Math.min(100, energy + 20); playSound(200); }
-    if (type === 'heavy') { dmg = assassin.atk * 1.5; dodgeBonus = -0.3; energy = Math.min(100, energy + 30); playSound(100, 'sawtooth'); }
-    if (type === 'heal') { assassin.hp = Math.min(assassin.maxHp, assassin.hp + 40); playSound(400, 'sine', 0.3); print("✨ Repairing...", "log-heal"); }
-    if (type === 'ult') { dmg = assassin.atk * 4; energy = 0; playSound(600, 'triangle', 0.5); print("🚀 OVERLOAD!", "log-crit"); }
+    else if (type === 'heavy') { dmg = assassin.atk * 1.5; dodgeBonus = -0.3; energy = Math.min(100, energy + 30); playSound(100, 'sawtooth'); }
+    else if (type === 'heal') { assassin.hp = Math.min(assassin.maxHp, assassin.hp + 40); playSound(400, 'sine', 0.3); print("✨ Repairing...", "log-heal"); }
+    else if (type === 'ult') { dmg = assassin.atk * 4; energy = 0; playSound(600, 'triangle', 0.5); print("🚀 OVERLOAD!", "log-crit"); }
 
     if (type !== 'heal') {
         if (Math.random() < enemy.evade && type !== 'ult') {
-            print(`💨 ${enemy.name} evaded your attack!`, "log-evade");
+            print(`💨 ${enemy.name} evaded!`, "log-evade");
         } else {
             dmg = Math.round(dmg + Math.random() * 10);
             enemy.hp -= dmg;
-            print(`⚔️ You hit ${enemy.name} for ${dmg}.`);
+            print(`⚔️ Hit ${enemy.name} for ${dmg}.`);
         }
     }
     updateUI();
@@ -90,7 +116,6 @@ function playerAttack(type) {
         setTimeout(() => {
             if (Math.random() < (0.15 + dodgeBonus)) {
                 print("💨 You dodged!", "log-evade");
-                playSound(800, 'sine', 0.05);
             } else {
                 let eDmg = Math.round(enemy.atk + Math.random() * 5);
                 assassin.hp -= eDmg;
@@ -103,10 +128,12 @@ function playerAttack(type) {
             if (assassin.hp <= 0) print("💀 SYSTEM FAILURE", "log-crit");
         }, 500);
     } else {
-        credits += 120;
-        print(`🏆 Sector Clear! Credits +120.`, "log-heal");
-        document.getElementById('battle-actions').classList.add('hidden');
-        document.getElementById('shop-actions').classList.remove('hidden');
+        credits += 125;
+        print(`🏆 Sector Clear! Credits +125.`, "log-heal");
+        const bActions = document.getElementById('battle-actions');
+        const sActions = document.getElementById('shop-actions');
+        if (bActions) bActions.classList.add('hidden');
+        if (sActions) sActions.classList.remove('hidden');
     }
 }
 
@@ -115,7 +142,6 @@ function buyUpgrade(t) {
         credits -= 100;
         if (t === 'atk') assassin.atk += 15;
         if (t === 'hp') { assassin.maxHp += 50; assassin.hp = assassin.maxHp; }
-        playSound(500, 'sine', 0.4);
         updateUI();
     }
 }
@@ -124,10 +150,15 @@ function nextStage() {
     stage++;
     energy = Math.min(energy, 30);
     spawnEnemy();
-    document.getElementById('battle-actions').classList.remove('hidden');
-    document.getElementById('shop-actions').classList.add('hidden');
+    const bActions = document.getElementById('battle-actions');
+    const sActions = document.getElementById('shop-actions');
+    if (bActions) bActions.classList.remove('hidden');
+    if (sActions) sActions.classList.add('hidden');
     updateUI();
 }
 
-spawnEnemy();
-updateUI();
+// Запуск
+window.onload = () => {
+    spawnEnemy();
+    updateUI();
+};
