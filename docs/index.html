@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlgoWar: XP Update</title>
+    <title>AlgoWar: English Edition</title>
     <style>
         body { background: #0a0a0a; color: #0f0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; user-select: none; }
         .stats-container { display: flex; justify-content: space-around; margin: 10px auto; width: 100%; max-width: 800px; }
@@ -38,22 +38,22 @@
         <div id="player-lvl" style="color: #fff; font-weight: bold; border: 1px solid #fff; padding: 0 10px;">LVL: 1</div>
     </div>
     
-    <div id="enemy-visual"></div>
+    <div id="enemy-visual">Initializing...</div>
 
     <div class="stats-container">
         <div>
-            <div style="font-size: 12px; margin-bottom: 4px;">ASSASSIN (YOU)</div>
+            <div style="font-size: 12px; margin-bottom: 4px;">ASSASSIN (PLAYER)</div>
             <div class="health-bar-bg"><div id="player-hp-bar" class="health-bar-fill"></div></div>
             <div id="player-hp-text" style="font-size: 11px;">100/100</div>
             
             <div class="bar-mini-bg"><div id="energy-bar"></div></div>
-            <div style="font-size: 8px; color: #0ff; text-align: left;">ULTRA ENERGY</div>
+            <div style="font-size: 8px; color: #0ff; text-align: left;">ULTRA CHARGE</div>
             
             <div class="bar-mini-bg"><div id="xp-bar"></div></div>
-            <div style="font-size: 8px; color: #f1c40f; text-align: left;">EXPERIENCE</div>
+            <div style="font-size: 8px; color: #f1c40f; text-align: left;">EXPERIENCE DATA</div>
         </div>
         <div>
-            <div id="enemy-name" style="font-size: 12px; margin-bottom: 4px;">ENEMY</div>
+            <div id="enemy-name" style="font-size: 12px; margin-bottom: 4px;">TARGET</div>
             <div class="health-bar-bg"><div id="enemy-hp-bar" class="health-bar-fill"></div></div>
             <div id="enemy-hp-text" style="font-size: 11px;">200/200</div>
         </div>
@@ -71,7 +71,7 @@
     <div id="shop-actions" class="shop hidden">
         <button onclick="buy('atk')" style="background: #9b59b6;">+15 ATK (100c)</button>
         <button onclick="buy('hp')" style="background: #c0392b;">+50 HP (100c)</button>
-        <button onclick="nextLevel()" style="background: #27ae60;">NEXT SECTOR >>></button>
+        <button onclick="nextLevel()" style="background: #27ae60;">PROCEED TO NEXT SECTOR</button>
     </div>
 
     <script src="game.js"></script>
