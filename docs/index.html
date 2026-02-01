@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AlgoWar: Visual Update</title>
+    <title>AlgoWar: XP Update</title>
     <style>
         body { background: #0a0a0a; color: #0f0; font-family: 'Courier New', monospace; text-align: center; margin: 0; padding: 20px; user-select: none; }
         .stats-container { display: flex; justify-content: space-around; margin: 10px auto; width: 100%; max-width: 800px; }
         .health-bar-bg { background: #222; width: 200px; height: 20px; border: 2px solid #444; border-radius: 3px; overflow: hidden; }
         .health-bar-fill { background: #2ecc71; height: 100%; width: 100%; transition: width 0.3s ease; }
-        .energy-bar-bg { background: #000; width: 200px; height: 6px; border: 1px solid #0ff; margin-top: 8px; }
-        #energy-bar { background: #0ff; height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 8px #0ff; }
         
-        #enemy-visual { 
-            font-size: 12px; line-height: 12px; white-space: pre; 
-            margin: 15px auto; display: block; padding: 15px; 
-            border: 1px solid #333; background: #000; min-height: 140px; 
-        }
-
+        /* Мини-полоски для Энергии и Опыта */
+        .bar-mini-bg { background: #000; width: 200px; height: 6px; border: 1px solid #333; margin-top: 5px; position: relative; }
+        #energy-bar { background: #0ff; height: 100%; width: 0%; transition: width 0.3s; box-shadow: 0 0 8px #0ff; }
+        #xp-bar { background: #f1c40f; height: 100%; width: 0%; transition: width 0.5s; box-shadow: 0 0 8px #f1c40f; }
+        
+        #enemy-visual { font-size: 12px; line-height: 12px; white-space: pre; margin: 15px auto; display: block; padding: 15px; border: 1px solid #333; background: #000; min-height: 140px; color: #f00; }
         #log { border: 1px solid #0f0; padding: 12px; margin: 15px auto; width: 90%; max-width: 700px; height: 150px; overflow-y: auto; text-align: left; background: rgba(0,20,0,0.9); font-size: 13px; color: #0f0; }
         .actions, .shop { margin: 15px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
         .hidden { display: none !important; }
@@ -30,25 +28,34 @@
         
         .log-crit { color: #ff4444; font-weight: bold; }
         .log-heal { color: #44ff44; }
+        .log-xp { color: #f1c40f; font-weight: bold; }
     </style>
 </head>
 <body>
     <h2 id="stage-title">SECTOR 1</h2>
-    <div id="credits-display" style="color: #f1c40f; font-weight: bold;">Credits: 0</div>
+    <div style="display: flex; justify-content: center; gap: 25px; margin-bottom: 10px;">
+        <div id="credits-display" style="color: #f1c40f; font-weight: bold;">Credits: 0</div>
+        <div id="player-lvl" style="color: #fff; font-weight: bold; border: 1px solid #fff; padding: 0 10px;">LVL: 1</div>
+    </div>
     
-    <div id="enemy-visual">Загрузка визуализации...</div>
+    <div id="enemy-visual"></div>
 
     <div class="stats-container">
         <div>
-            <div style="font-size: 12px; margin-bottom: 4px;">ASSASSIN</div>
+            <div style="font-size: 12px; margin-bottom: 4px;">ASSASSIN (YOU)</div>
             <div class="health-bar-bg"><div id="player-hp-bar" class="health-bar-fill"></div></div>
-            <div id="player-hp-text" style="font-size: 12px;">100/100</div>
-            <div class="energy-bar-bg"><div id="energy-bar"></div></div>
+            <div id="player-hp-text" style="font-size: 11px;">100/100</div>
+            
+            <div class="bar-mini-bg"><div id="energy-bar"></div></div>
+            <div style="font-size: 8px; color: #0ff; text-align: left;">ULTRA ENERGY</div>
+            
+            <div class="bar-mini-bg"><div id="xp-bar"></div></div>
+            <div style="font-size: 8px; color: #f1c40f; text-align: left;">EXPERIENCE</div>
         </div>
         <div>
-            <div id="enemy-name" style="font-size: 12px; margin-bottom: 4px;">CODE-TITAN</div>
+            <div id="enemy-name" style="font-size: 12px; margin-bottom: 4px;">ENEMY</div>
             <div class="health-bar-bg"><div id="enemy-hp-bar" class="health-bar-fill"></div></div>
-            <div id="enemy-hp-text" style="font-size: 12px;">200/200</div>
+            <div id="enemy-hp-text" style="font-size: 11px;">200/200</div>
         </div>
     </div>
 
@@ -64,7 +71,7 @@
     <div id="shop-actions" class="shop hidden">
         <button onclick="buy('atk')" style="background: #9b59b6;">+15 ATK (100c)</button>
         <button onclick="buy('hp')" style="background: #c0392b;">+50 HP (100c)</button>
-        <button onclick="nextLevel()" style="background: #27ae60;">GO TO NEXT SECTOR</button>
+        <button onclick="nextLevel()" style="background: #27ae60;">NEXT SECTOR >>></button>
     </div>
 
     <script src="game.js"></script>
