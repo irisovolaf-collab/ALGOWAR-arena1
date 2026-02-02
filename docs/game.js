@@ -1,150 +1,118 @@
-// ASCII-графика врагов
-const arts = {
-    TITAN: `
-      _______
-     |  ___  |
-     | |   | |
-     | |___| |
-     |_______|
-     /       \\
-    / [X] [X] \\
-    |    ^    |
-    \\_________/`,
-    SCOUT: `
-       /\\
-      /  \\
-     | -- |
-     | !! |
-      \\__/
-      /  \\
-     /____\\`,
-    GUARD: `
-     _________
-    |  _____  |
-    | |  I  | |
-    | |_____| |
-    |_________|
-    [#########]
-    [#########]`
-};
+const Game = {
+    p: { hp: 100, mHp: 100, atk: 40, credits: 0 },
+    e: { name: "", hp: 0, mHp: 0, atk: 0, art: "" },
+    stage: 1,
+    isBusy: false,
+    autoMode: true, // АВТОПИЛОТ ВКЛЮЧЕН
 
-// Состояние игры
-let stage = 1;
-let credits = 0;
-let energy = 0;
-let player = { hp: 100, maxHp: 100, atk: 40 };
-let enemy = { name: "CYBER-TITAN", hp: 200, maxHp: 200, atk: 15, type: "TITAN", color: "#e74c3c" };
+    init() {
+        this.spawn();
+        this.log("SYSTEM ONLINE. AUTOPILOT: ACTIVE");
+        this.update();
+        if(this.autoMode) this.planNextMove();
+    },
 
-// Функция обновления экрана
-function updateUI() {
-    document.getElementById('stage-title').innerText = "SECTOR " + stage;
-    document.getElementById('credits-display').innerText = "Credits: " + credits;
-    document.getElementById('energy-bar').style.width = energy + "%";
-    document.getElementById('ult-button').style.display = (energy >= 100) ? "inline-block" : "none";
-    
-    document.getElementById('player-hp-bar').style.width = (player.hp / player.maxHp * 100) + "%";
-    document.getElementById('enemy-hp-bar').style.width = (enemy.hp / enemy.maxHp * 100) + "%";
-    document.getElementById('player-hp-text').innerText = Math.round(player.hp) + "/" + player.maxHp;
-    document.getElementById('enemy-hp-text').innerText = Math.round(enemy.hp) + "/" + enemy.maxHp;
-    
-    const visual = document.getElementById('enemy-visual');
-    visual.innerText = arts[enemy.type] || arts.TITAN;
-    visual.style.color = enemy.color;
-    document.getElementById('enemy-name').innerText = enemy.name;
-    document.getElementById('enemy-name').style.color = enemy.color;
-}
+    spawn() {
+        const d = Math.pow(1.15, this.stage - 1);
+        this.e = {
+            name: "BOT-" + Math.floor(Math.random() * 99),
+            mHp: Math.round(120 * d),
+            atk: Math.round(10 * d),
+            art: `\n      [=====]\n     /  X X  \\\n    |    V    |\n     \\_______/`
+        };
+        this.e.hp = this.e.mHp;
+    },
 
-// Вывод текста в лог
-function print(msg, cls = "") {
-    const log = document.getElementById('log');
-    log.innerHTML += `<p class="${cls}">${msg}</p>`;
-    log.scrollTop = log.scrollHeight;
-}
-
-// БОЕВАЯ ЛОГИКА
-window.attack = function(type) {
-    if (player.hp <= 0 || enemy.hp <= 0) return;
-
-    let dmg = 0;
-    if (type === 'quick') { 
-        dmg = player.atk * 0.8; 
-        energy = Math.min(100, energy + 25); 
-        print("⚡ Быстрая атака по " + enemy.name); 
-    }
-    if (type === 'heavy') { 
-        dmg = player.atk * 1.5; 
-        energy = Math.min(100, energy + 35); 
-        print("🔨 Тяжелый удар!"); 
-    }
-    if (type === 'heal') { 
-        player.hp = Math.min(player.maxHp, player.hp + 40); 
-        print("🔧 Система восстановлена", "log-heal"); 
-    }
-    if (type === 'ult') { 
-        dmg = player.atk * 4.5; 
-        energy = 0; 
-        print("🚀 КРИТИЧЕСКАЯ ПЕРЕГРУЗКА!", "log-crit"); 
-    }
-
-    if (type !== 'heal') {
-        let finalDmg = Math.round(dmg + Math.random() * 10);
-        enemy.hp -= finalDmg;
-        print("⚔️ Нанесено: " + finalDmg);
-    }
-
-    updateUI();
-
-    // Ответ врага
-    if (enemy.hp > 0) {
+    // Планировщик автоматического хода
+    planNextMove() {
+        if (!this.autoMode || this.isBusy || this.p.hp <= 0) return;
+        
         setTimeout(() => {
-            let ed = Math.round(enemy.atk + Math.random() * 5);
-            player.hp -= ed;
-            print("🤖 " + enemy.name + " атаковал: -" + ed + " HP", "log-crit");
-            document.body.classList.add('shake');
-            setTimeout(() => document.body.classList.remove('shake'), 200);
-            updateUI();
-            if (player.hp <= 0) print("💀 СИСТЕМНЫЙ СБОЙ: ВЫ ПОГИБЛИ", "log-crit");
-        }, 400);
-    } else {
-        credits += 125;
-        print("🏆 СЕКТОР ЗАЧИЩЕН!", "log-heal");
-        document.getElementById('battle-actions').classList.add('hidden');
-        document.getElementById('shop-actions').classList.remove('hidden');
+            if (this.isBusy) return;
+            // Логика ИИ: лечимся, если мало HP, иначе бьем
+            const action = (this.p.hp < this.p.mHp * 0.4) ? 'heal' : 'quick';
+            this.attack(action);
+        }, 2000); // Ход каждые 2 секунды
+    },
+
+    attack(type) {
+        if (this.isBusy || this.p.hp <= 0) return;
+        this.isBusy = true;
+        this.update();
+
+        let d = this.p.atk * (type === 'heavy' ? 1.5 : (type === 'quick' ? 0.8 : 0));
+        
+        if (type === 'heal') {
+            let h = Math.round(this.p.mHp * 0.3);
+            this.p.hp = Math.min(this.p.mHp, this.p.hp + h);
+            this.log(`REPAIR: +${h} HP`);
+        } else {
+            let f = Math.round(d + Math.random() * 5);
+            this.e.hp -= f;
+            this.log(`PLAYER -> ${this.e.name}: ${f} DMG`);
+        }
+
+        this.update();
+
+        if (this.e.hp <= 0) {
+            this.win();
+        } else {
+            setTimeout(() => this.eTurn(), 800);
+        }
+    },
+
+    eTurn() {
+        if (this.p.hp <= 0) return;
+        let d = Math.round(this.e.atk + Math.random() * 5);
+        this.p.hp -= d;
+        this.log(`${this.e.name} -> PLAYER: ${d} DMG`, "red");
+        this.update();
+        
+        this.isBusy = false;
+        this.update();
+
+        if (this.p.hp <= 0) {
+            this.log("SYSTEM CRASH.", "red");
+            document.getElementById('ui-battle').style.display = 'none';
+        } else {
+            this.planNextMove(); // Снова планируем авто-ход
+        }
+    },
+
+    win() {
+        this.p.credits += 100;
+        this.log("SECTOR CLEAR. +100c");
+        this.isBusy = false;
+        
+        // Автоматический переход в магазин и следующий уровень
+        setTimeout(() => {
+            this.stage++;
+            this.spawn();
+            this.log("PROCEEDING TO SECTOR " + this.stage);
+            this.update();
+            this.planNextMove();
+        }, 1500);
+    },
+
+    update() {
+        try {
+            document.getElementById('stage-txt').innerText = "SECTOR " + this.stage;
+            document.getElementById('credits-txt').innerText = this.p.credits;
+            document.getElementById('hp-p').style.width = (this.p.hp / this.p.mHp * 100) + "%";
+            document.getElementById('hp-e').style.width = (this.e.hp / this.e.mHp * 100) + "%";
+            document.getElementById('enemy-visual').innerText = this.e.art;
+
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = this.isBusy);
+        } catch (e) { console.error("UI Update Error: ", e); }
+    },
+
+    log(m, color = "") {
+        const l = document.getElementById('log');
+        if(!l) return;
+        l.innerHTML += `<p style="color:${color === 'red' ? '#ff4444' : '#2ecc71'}">> ${m}</p>`;
+        l.scrollTop = l.scrollHeight;
     }
 };
 
-// МАГАЗИН
-window.buy = function(item) {
-    if (credits >= 100) {
-        credits -= 100;
-        if (item === 'atk') player.atk += 15;
-        if (item === 'hp') { player.maxHp += 50; player.hp = player.maxHp; }
-        print("💰 Улучшение установлено", "log-heal");
-        updateUI();
-    }
-};
-
-// ПЕРЕХОД
-window.nextLevel = function() {
-    stage++;
-    energy = Math.min(energy, 30);
-    
-    const types = ["TITAN", "SCOUT", "GUARD"];
-    const colors = ["#e74c3c", "#f1c40f", "#3498db"];
-    const idx = Math.floor(Math.random() * types.length);
-    
-    enemy.type = types[idx];
-    enemy.color = colors[idx];
-    enemy.name = "CYBER-" + enemy.type;
-    enemy.maxHp = Math.round(200 * Math.pow(1.2, stage - 1));
-    enemy.hp = enemy.maxHp;
-    enemy.atk = 15 + (stage * 4);
-
-    document.getElementById('battle-actions').classList.remove('hidden');
-    document.getElementById('shop-actions').classList.add('hidden');
-    print("🚨 ВХОД В СЕКТОР " + stage + "...");
-    updateUI();
-};
-
-// Инициализация при загрузке
-window.onload = updateUI;
+window.onload = () => Game.init();
